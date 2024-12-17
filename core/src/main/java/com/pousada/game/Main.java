@@ -1,95 +1,108 @@
 package com.pousada.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
     Texture backgroundTexture;
     SpriteBatch spriteBatch;
     FitViewport viewport;
-    Texture normalButon;
-    Texture pressedButon;
-    ImageButton button;
-    TextureRegionDrawable normalDrawable;
-    TextureRegionDrawable pressedDrawable;
+    Stage stage;
+
+    Label logLabel;
+    StringBuilder logText;
 
     @Override
     public void create() {
         spriteBatch = new SpriteBatch();
         backgroundTexture = new Texture("Background.png");
-        viewport = new FitViewport(8, 5);
-        normalButon = new Texture("buttons/botao_normal.png");
-        pressedButon = new Texture("buttons/botao_press.png");
-        normalDrawable = new TextureRegionDrawable(new TextureRegion(normalButon));
-        pressedDrawable = new TextureRegionDrawable(new TextureRegion(pressedButon));
+        viewport = new FitViewport(300, 182);
 
+        // Configura o Stage
+        stage = new Stage(viewport, spriteBatch);
+        Gdx.input.setInputProcessor(stage);
+
+        // Carrega as texturas do botão normal e pressionado
+        Texture normalTexture = new Texture("button_normal.png");
+        Texture pressedTexture = new Texture("button_pressed.png");
+
+        // Cria o botão com as texturas
         ImageButton.ImageButtonStyle buttonStyle = new ImageButton.ImageButtonStyle();
-        buttonStyle.up = normalDrawable;
-        buttonStyle.down = pressedDrawable;
+        buttonStyle.up = new TextureRegionDrawable(new TextureRegion(normalTexture));
+        buttonStyle.down = new TextureRegionDrawable(new TextureRegion(pressedTexture));
 
-
+        ImageButton button = new ImageButton(buttonStyle);
         button.addListener(new ClickListener() {
             @Override
-            public void clicked(com.badlogic.gdx.input.InputEvent event, float x, float y) {
-                System.out.println("Botão de imagem clicado!");
+            public void clicked(InputEvent event, float x, float y) {
+                logText.append("Botão pressionado!\n");
+                logLabel.setText(logText);
             }
         });
 
+        // Cria o campo de logs (Label) e o constrói
+        logText = new StringBuilder();
+        logLabel = new Label("", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
 
+        // Configura o layout usando Table
+        Table table = new Table();
+        table.setFillParent(true);
+        stage.addActor(table);
+
+        // Posiciona os elementos na tela
+        table.top().left(); // Topo e canto esquerdo
+        table.row().bottom();
+        table.add(button).pad(10); // Botão no canto inferior esquerdo
+        table.add(logLabel).expand().right().top().pad(10); // Log no canto direito superior
     }
 
     @Override
     public void resize(int width, int height) {
         viewport.update(width, height, true);
+        stage.getViewport().update(width, height, true);
     }
 
     @Override
     public void render() {
-        draw();
+        ScreenUtils.clear(0.1686f, 0.1686f, 0.1686f, 1f); // Limpa a tela
+        spriteBatch.begin();
+        drawBackground(); // Desenha o background
+        spriteBatch.end();
+
+        // Atualiza e desenha o Stage (UI)
+        stage.act(Gdx.graphics.getDeltaTime());
+        stage.draw();
+    }
+
+    private void drawBackground() {
+        float worldWidth = viewport.getWorldWidth();
+        float worldHeight = viewport.getWorldHeight();
+
+        // Desenha o background no canto superior esquerdo
+        spriteBatch.setProjectionMatrix(viewport.getCamera().combined);
+        spriteBatch.draw(backgroundTexture, 0, worldHeight - backgroundTexture.getHeight());
     }
 
     @Override
     public void dispose() {
         spriteBatch.dispose();
         backgroundTexture.dispose();
-    }
-
-    private void draw() {
-        ScreenUtils.clear(0.1686f, 0.1686f, 0.1686f, 1f);
-        viewport.apply();
-        spriteBatch.setProjectionMatrix(viewport.getCamera().combined);
-        spriteBatch.begin();
-
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
-
-        spriteBatch.draw(backgroundTexture, 0, 0, worldWidth, worldHeight);
-        button = new ImageButton(buttonStyle);
-        button.setPosition(200, 200);
-
-        spriteBatch.end();
+        stage.dispose();
     }
 }
