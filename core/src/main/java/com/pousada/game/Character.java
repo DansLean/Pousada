@@ -17,10 +17,12 @@ public class Character {
     private float velocidade = 100f;
     private String acaoAtual;
 
-    private Animation<TextureRegion> animacaoSubir;
     private Animation<TextureRegion> animacaoDescer;
+    private Animation<TextureRegion> animacaoSubir;
     private Animation<TextureRegion> animacaoEsquerda;
-    private Animation<TextureRegion> animationDireita;
+    private Animation<TextureRegion> animacaoDireita;
+    private Animation<TextureRegion> animacaoSentado;
+    private Animation<TextureRegion> animacaoLendo;
 
     public Character(int posX, int posY) {
         Random random = new Random();
@@ -34,14 +36,18 @@ public class Character {
         animacaoDescer = new Animation<>(0.1f, quadros[0]);
         animacaoSubir = new Animation<>(0.1f, quadros[1]);
         animacaoEsquerda = new Animation<>(0.1f, quadros[2]);
-        animationDireita = new Animation<>(0.1f, quadros[3]);
+        animacaoDireita = new Animation<>(0.1f, quadros[3]);
+        animacaoSentado = new Animation<>(0.3f, quadros[4]);
+        animacaoLendo = new Animation<>(0.3f, quadros[5]);
 
         animacaoSubir.setPlayMode(Animation.PlayMode.LOOP);
         animacaoDescer.setPlayMode(Animation.PlayMode.LOOP);
         animacaoEsquerda.setPlayMode(Animation.PlayMode.LOOP);
-        animationDireita.setPlayMode(Animation.PlayMode.LOOP);
+        animacaoDireita.setPlayMode(Animation.PlayMode.LOOP);
+        animacaoSentado.setPlayMode(Animation.PlayMode.LOOP);
+        animacaoLendo.setPlayMode(Animation.PlayMode.LOOP);
 
-        setAcao("descer");
+        setAcao("sentado");
 
         // Posição inicial do personagem
         x = posX;
@@ -64,10 +70,16 @@ public class Character {
                 animacaoAtual = animacaoEsquerda;
                 break;
             case "direita":
-                animacaoAtual = animationDireita;
+                animacaoAtual = animacaoDireita;
+                break;
+            case "sentado":
+                animacaoAtual = animacaoSentado;
+                break;
+            case "lendo":
+                animacaoAtual = animacaoLendo;
                 break;
             default:
-                animacaoAtual = animacaoDescer;
+                animacaoAtual = animacaoSentado;
         }
     }
 
@@ -86,6 +98,10 @@ public class Character {
         } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)){
             y -= velocidade * deltaTime;
             setAcao("descer");
+        } else if (Gdx.input.isKeyPressed(Input.Keys.SPACE)){
+            setAcao("lendo");
+        } else if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+            setAcao("sentado");
         } else {
             x = x;
             y = y;
