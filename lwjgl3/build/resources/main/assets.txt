@@ -1,3 +1,7 @@
+Background.png
+CaskaydiaCoveNerdFontPropo-Regular.ttf
+button_normal.png
+button_pressed.png
 libgdx.png
 ui/font-list.fnt
 ui/font-subtitle.fnt
