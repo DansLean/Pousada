@@ -24,6 +24,7 @@ public class Main extends ApplicationAdapter {
     SpriteBatch spriteBatch;
     Stage stage;
     BitmapFont textLabel;
+    Character personagem;
 
     @Override
     public void create() {
@@ -34,12 +35,18 @@ public class Main extends ApplicationAdapter {
         textLabel = criarFonte(28, Color.WHITE);
         drawBackground();
         drawButton();
+
+        personagem= new Character(205, 42);
     }
 
     @Override
     public void render() {
+        spriteBatch.begin();
         ScreenUtils.clear(0.1686f, 0.1686f, 0.1686f, 1f);
         stage.draw();
+        personagem.update(Gdx.graphics.getDeltaTime());
+        personagem.render(spriteBatch);
+        spriteBatch.end();
     }
 
     private void drawBackground() {
