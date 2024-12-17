@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -20,89 +21,56 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 
 public class Main extends ApplicationAdapter {
-    Texture backgroundTexture;
     SpriteBatch spriteBatch;
-    FitViewport viewport;
     Stage stage;
-
-    Label logLabel;
-    StringBuilder logText;
+    BitmapFont textLabel;
 
     @Override
     public void create() {
         spriteBatch = new SpriteBatch();
-        backgroundTexture = new Texture("Background.png");
-        viewport = new FitViewport(300, 182);
-
-        // Configura o Stage
-        stage = new Stage(viewport, spriteBatch);
+        stage = new Stage();
         Gdx.input.setInputProcessor(stage);
 
-        // Carrega as texturas do botão normal e pressionado
-        Texture normalTexture = new Texture("button_normal.png");
-        Texture pressedTexture = new Texture("button_pressed.png");
-
-        // Cria o botão com as texturas
-        ImageButton.ImageButtonStyle buttonStyle = new ImageButton.ImageButtonStyle();
-        buttonStyle.up = new TextureRegionDrawable(new TextureRegion(normalTexture));
-        buttonStyle.down = new TextureRegionDrawable(new TextureRegion(pressedTexture));
-
-        ImageButton button = new ImageButton(buttonStyle);
-        button.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                logText.append("Botão pressionado!\n");
-                logLabel.setText(logText);
-            }
-        });
-
-        // Cria o campo de logs (Label) e o constrói
-        logText = new StringBuilder();
-        logLabel = new Label("", new Label.LabelStyle(new BitmapFont(), Color.WHITE));
-
-        // Configura o layout usando Table
-        Table table = new Table();
-        table.setFillParent(true);
-        stage.addActor(table);
-
-        // Posiciona os elementos na tela
-        table.top().left(); // Topo e canto esquerdo
-        table.row().bottom();
-        table.add(button).pad(10); // Botão no canto inferior esquerdo
-        table.add(logLabel).expand().right().top().pad(10); // Log no canto direito superior
-    }
-
-    @Override
-    public void resize(int width, int height) {
-        viewport.update(width, height, true);
-        stage.getViewport().update(width, height, true);
+        textLabel = criarFonte(28, Color.WHITE);
+        drawBackground();
+        drawButton();
     }
 
     @Override
     public void render() {
-        ScreenUtils.clear(0.1686f, 0.1686f, 0.1686f, 1f); // Limpa a tela
-        spriteBatch.begin();
-        drawBackground(); // Desenha o background
-        spriteBatch.end();
-
-        // Atualiza e desenha o Stage (UI)
-        stage.act(Gdx.graphics.getDeltaTime());
+        ScreenUtils.clear(0.1686f, 0.1686f, 0.1686f, 1f);
         stage.draw();
     }
 
     private void drawBackground() {
-        float worldWidth = viewport.getWorldWidth();
-        float worldHeight = viewport.getWorldHeight();
+        BackGround background = new BackGround(0, Gdx.graphics.getHeight() - 440);
+        stage.addActor(background);
+    }
 
-        // Desenha o background no canto superior esquerdo
-        spriteBatch.setProjectionMatrix(viewport.getCamera().combined);
-        spriteBatch.draw(backgroundTexture, 0, worldHeight - backgroundTexture.getHeight());
+    private void drawButton() {
+        Button button = new Button(325, Gdx.graphics.getHeight() - 470);
+        stage.addActor(button);
     }
 
     @Override
     public void dispose() {
         spriteBatch.dispose();
-        backgroundTexture.dispose();
         stage.dispose();
     }
+
+    private BitmapFont criarFonte(int tamanho, Color cor) {
+        BitmapFont fonte;
+
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("CaskaydiaCoveNerdFontPropo-Regular.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parametro = new FreeTypeFontGenerator.FreeTypeFontParameter();
+
+        parametro.size = tamanho;
+        parametro.color = cor;
+
+        fonte = generator.generateFont(parametro);
+        generator.dispose();
+
+        return fonte;
+    }
+
 }
