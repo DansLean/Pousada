@@ -1,7 +1,6 @@
 package com.pousada.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -11,18 +10,22 @@ import com.badlogic.gdx.math.Vector2;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
-public class Character {
+public class Character implements Runnable {
     private Texture spriteSheet;
     private Animation<TextureRegion> animacaoAtual;
     private float tempo;
-    private float velocidade = 25f;
+    private float velocidade = 100f;
     private String acaoAtual;
 
     private Vector2 posicao;
     private List<Vector2> waypoints; // Lista de pontos (caminho)
     private int waypointIndex = 0; // Índice do waypoint atual
-    private float tolerancia = 1f; // Tolerância para considerar que chegou ao waypoint
+    private float tolerancia = 1f;// Tolerância para considerar que chegou ao waypoint
+    public float posAssentoX = 0f;
+    public float posAssentoY = 0f;
+    public int assento = 1;
 
     private Animation<TextureRegion> animacaoDescer;
     private Animation<TextureRegion> animacaoSubir;
@@ -30,6 +33,13 @@ public class Character {
     private Animation<TextureRegion> animacaoDireita;
     private Animation<TextureRegion> animacaoSentado;
     private Animation<TextureRegion> animacaoLendo;
+
+    public static Semaphore mutex = new Semaphore(1);
+    public static Semaphore espera = new Semaphore(1);
+    public static Semaphore assistindo = new Semaphore(0);
+    int canal_atual;
+    int canal_preferido;
+
 
     public Character(int posX, int posY) {
         Random random = new Random();
@@ -54,28 +64,26 @@ public class Character {
         animacaoSentado.setPlayMode(Animation.PlayMode.LOOP);
         animacaoLendo.setPlayMode(Animation.PlayMode.LOOP);
 
-        setAcao("sentado");
+        setSprite("esquerda");
 
-        posicao = new Vector2(205, 52); // posição inicial 205,52
+        posicao = new Vector2(Gdx.graphics.getWidth() * 0.589f, Gdx.graphics.getHeight() * 0.35f); // posição inicial 205,52
         waypoints = new ArrayList<>();
-        waypoints.add(new Vector2(90, 52)); // pé da entrada para TV
-        waypoints.add(new Vector2(120,100)); // livros
+        waypoints.add(new Vector2(Gdx.graphics.getWidth() * 0.25f, Gdx.graphics.getHeight() * 0.35f)); // pé da entrada para TV
+
+        //waypoints.add(new Vector2(posAssentoX, posAssentoY)); // assentos da tv
+        waypoints.add(new Vector2(Gdx.graphics.getWidth() * 0.35f, Gdx.graphics.getHeight() * 0.65f)); // livros
     }
 
-    public void adicionarWaypoint(float x, float y) {
-        waypoints.add(new Vector2(x, y));
-    }
-
-    public void setAcao(String novaAcao) {
+    public void setSprite(String novaAcao) {
         if (acaoAtual != null && acaoAtual.equals(novaAcao)) return;
         acaoAtual = novaAcao;
         tempo = 0;
 
         switch (novaAcao) {
-            case "subir":
+            case "cima":
                 animacaoAtual = animacaoSubir;
                 break;
-            case "descer":
+            case "baixo":
                 animacaoAtual = animacaoDescer;
                 break;
             case "esquerda":
@@ -96,29 +104,6 @@ public class Character {
     }
 
     public void update(float deltaTime) {
-//
-//
-//        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-//            posicao.x += velocidade * deltaTime;
-//            setAcao("direita");
-//        } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT) && posicao.x > 0) {
-//            posicao.x -= velocidade * deltaTime;
-//            setAcao("esquerda");
-//        } else if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-//            posicao.y += velocidade * deltaTime;
-//            setAcao("subir");
-//        } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN) && posicao.y > 0){
-//            posicao.y -= velocidade * deltaTime;
-//            setAcao("descer");
-//        } else if (Gdx.input.isKeyPressed(Input.Keys.SPACE)){
-//            setAcao("lendo");
-//        } else if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
-//            setAcao("sentado");
-//        } else {
-//            posicao.x = posicao.x;
-//            posicao.y = posicao.y;
-//        }
-
         Vector2 destino = waypoints.get(waypointIndex);
 
         Vector2 direcao = new Vector2(destino).sub(posicao).nor();
@@ -127,6 +112,7 @@ public class Character {
 
         if (posicao.dst(destino) < tolerancia) {
             posicao.set(destino); // Garante que está exatamente no ponto
+            assento += 1;
             waypointIndex++;
 
             // Se chegou no último waypoint, reinicia o caminho (ou para)
@@ -135,15 +121,70 @@ public class Character {
             }
         }
 
+        if (assento == 1) {
+            posAssentoX = Gdx.graphics.getWidth() * 0.25f;
+            posAssentoY = Gdx.graphics.getHeight() * 0.35f;
+        } else if (assento == 2) {
+            posAssentoX= Gdx.graphics.getWidth() * 3.2f;
+            posAssentoY = Gdx.graphics.getHeight() * 1.75f;
+        }
+
+        if (direcao.x > 0) {
+            setSprite("direita");
+        } else if (direcao.x < 0) {
+            setSprite("esquerda");
+        }
+
         tempo += deltaTime;
     }
 
     public void render(Batch batch) {
         TextureRegion quadroAtual = animacaoAtual.getKeyFrame(tempo);
-        batch.draw(quadroAtual, posicao.x, posicao.y);
+        batch.draw(quadroAtual, posicao.x, posicao.y, quadroAtual.getRegionWidth() * 2.5f, quadroAtual.getRegionHeight() * 2.5f);
     }
 
     public void dispose() {
         spriteSheet.dispose();
+    }
+
+    public static void down(Semaphore semaphore) {
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void up(Semaphore semaphore) {
+        semaphore.release();
+    }
+
+    public void assistir_tv() {
+        // depois de sair de bloqueado, teleportar hóspede para um banquinho e colocar o sprite dele assistir tv
+    }
+
+    public void descansar() {
+        // depois que passar o tempo de assistir tv, rodar essa função dentro de assistir_tv(), onde o hóspede vai
+        // se teleportar pra perto das estantes e rodar o sprite dele lendo o livro
+    }
+
+    @Override
+    public void run() {
+        for(;;) {
+            down(mutex);
+            if (assistindo.availablePermits() > 0) {
+                if (canal_atual == canal_preferido) {
+                    up(mutex);
+                    assistir_tv();
+                } else {
+                up(mutex);
+                down(espera);
+                }
+            } else {
+                canal_atual = canal_preferido;
+                up(mutex);
+                assistir_tv();
+            }
+        }
     }
 }
