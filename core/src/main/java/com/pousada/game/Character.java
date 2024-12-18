@@ -5,14 +5,16 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.List;
 
-public class Character {
+public class Character extends Actor {
     private Texture spriteSheet;
     private Animation<TextureRegion> animacaoAtual;
     private float tempo;
@@ -31,7 +33,13 @@ public class Character {
     private Animation<TextureRegion> animacaoSentado;
     private Animation<TextureRegion> animacaoLendo;
 
-    public Character(int posX, int posY) {
+    private String nome;
+    private Integer canal;
+    private Float ttv;
+    private Float td;
+    private BitmapFont font;
+
+    public Character(int posX, int posY, String nome, int canal, float ttv, float td) {
         Random random = new Random();
         int numero = random.nextInt(6) + 1;
         String path = ("Characters/Character_" + numero + ".png");
@@ -60,6 +68,46 @@ public class Character {
         waypoints = new ArrayList<>();
         waypoints.add(new Vector2(90, 52)); // pé da entrada para TV
         waypoints.add(new Vector2(120,100)); // livros
+
+        this.nome = nome;
+        this.canal = canal;
+        this.ttv = ttv;
+        this.td = td;
+
+        font = new BitmapFont();
+        font.getData().setScale(1.0f);
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public int getCanal() {
+        return canal;
+    }
+
+    public void setCanal(int canal) {
+        this.canal = canal;
+    }
+
+    public float getTtv() {
+        return ttv;
+    }
+
+    public void setTtv(float ttv) {
+        this.ttv = ttv;
+    }
+
+    public float getTd() {
+        return td;
+    }
+
+    public void setTd(float td) {
+        this.td = td;
     }
 
     public void adicionarWaypoint(float x, float y) {
@@ -96,6 +144,20 @@ public class Character {
     }
 
     public void update(float deltaTime) {
+
+        if (ttv > 0) {
+            ttv -= deltaTime;
+            if (ttv < 0) {
+                float ttv = 0;
+            }
+        }
+
+        if (ttv == 0 && td > 0) {
+            td -= deltaTime;
+            if (td < 0) {
+                float td = 0;
+            }
+        }
 //
 //
 //        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
@@ -141,6 +203,11 @@ public class Character {
     public void render(Batch batch) {
         TextureRegion quadroAtual = animacaoAtual.getKeyFrame(tempo);
         batch.draw(quadroAtual, posicao.x, posicao.y);
+
+        if (!nome.isEmpty()) {
+            String texto = nome + "\n" + canal + "\n" + String.format("%.0f", ttv);
+            font.draw(batch, texto, posicao.x, posicao.y + 80);
+        }
     }
 
     public void dispose() {

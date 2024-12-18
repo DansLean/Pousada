@@ -17,6 +17,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 
+import java.util.ArrayList;
+
 public class Main extends ApplicationAdapter {
     SpriteBatch spriteBatch;
     Stage stage;
@@ -26,7 +28,7 @@ public class Main extends ApplicationAdapter {
     BitmapFont textLabel;
     Label logLabel;
     StringBuilder logs;
-    Character personagem;
+    ArrayList<Character> personagens;
     ScrollPane scrollPane;
     Table rootTable;
     Window inputWindow;
@@ -44,7 +46,6 @@ public class Main extends ApplicationAdapter {
         backgroundImage.setTouchable(Touchable.disabled);
         stage.addActor(backgroundImage);
 
-        personagem = new Character(205, 42);
         rootTable = new Table();
         rootTable.setFillParent(true);
 
@@ -88,6 +89,8 @@ public class Main extends ApplicationAdapter {
         });
 
         stage.addActor(button);
+
+        personagens = new ArrayList<>();
     }
 
     private void mostrarInputs() {
@@ -122,9 +125,15 @@ public class Main extends ApplicationAdapter {
                         int canalInt = Integer.parseInt(canal);
                         float ttvFloat = Float.parseFloat(ttv);
                         float tdFloat = Float.parseFloat(td);
-                        criarPersonagem(nome, canalInt, ttvFloat, tdFloat);
-                        adicionarLog("Personagem criado:\nNome - " + nome + "\nCanal - " + canalInt + "\nTempo de TV - " + ttvFloat + "\nTempo de Descanso - " + tdFloat);
-                        inputWindow.remove();
+
+
+                        if (personagens.size() < 10) {
+                            criarPersonagem(nome, canalInt, ttvFloat, tdFloat);
+                            adicionarLog("Personagem criado:\nNome - " + nome + "\nCanal - " + canalInt + "\nTempo de TV - " + ttvFloat + "\nTempo de Descanso - " + tdFloat);
+                            inputWindow.remove();
+                        } else {
+                            adicionarLog("Limite de 10 personagens atingido!");
+                        }
                     } catch (NumberFormatException e) {
                         adicionarLog("Canal inválido!");
                     }
@@ -150,10 +159,8 @@ public class Main extends ApplicationAdapter {
     }
 
     private void criarPersonagem(String nome, int canal, float ttv, float td) {
-//        personagem.setNome(nome);
-//        personagem.setCanal(canal);
-//        personagem.setTtv(ttv);
-//        personagem.setTd(td);
+        Character novoPersonagem = new Character(205, 42, nome, canal, ttv, td);
+        personagens.add(novoPersonagem);
     }
 
     private Window.WindowStyle criarJanelaStyle() {
@@ -205,8 +212,10 @@ public class Main extends ApplicationAdapter {
         logLabel.setText(logs.toString());
 
         spriteBatch.begin();
-        personagem.update(Gdx.graphics.getDeltaTime());
-        personagem.render(spriteBatch);
+        for (Character p : personagens) {
+            p.update(Gdx.graphics.getDeltaTime());
+            p.render(spriteBatch);
+        }
         spriteBatch.end();
     }
 
